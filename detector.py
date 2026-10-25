@@ -1,47 +1,47 @@
-"""Starter heuristic for flagging suspicious simulated memory growth."""
 
+"""Detection rules for simulated resource usage."""
 
 def detect_suspicious_growth(
     memory_samples_mb,
-    minimum_growth_mb=150,
+    minimum_growth_mb=60.0,
     minimum_consecutive_increases=3,
 ):
-    """Flag a series when growth and consecutive increases meet chosen thresholds.
+    """Flag sustained upward memory trends in sample history.
 
-    This is an educational heuristic, not proof of a true resource leak.
+    This is an educational heuristic, not proof of a real memory leak.
     """
     samples = list(memory_samples_mb)
-    if len(samples) < 2:
+
+    if len(samples) < minimum_consecutive_increases + 1:
         return {
             "suspicious": False,
-            "total_growth_mb": 0 if not samples else 0,
+            "total_growth_mb": 0.0,
             "consecutive_increases": 0,
             "reason": "Not enough samples",
         }
 
-    total_growth = samples[-1] - samples[0]
-    consecutive_increases = 0
-    longest_run = 0
+    recent = samples[-(minimum_consecutive_increases + 1):]
+    total_growth = recent[-1] - recent[0]
 
-    for previous, current in zip(samples, samples[1:]):
+    consecutive_increases = 0
+    for previous, current in zip(recent, recent[1:]):
         if current > previous:
             consecutive_increases += 1
-            longest_run = max(longest_run, consecutive_increases)
         else:
             consecutive_increases = 0
 
     suspicious = (
-        total_growth >= minimum_growth_mb
-        and longest_run >= minimum_consecutive_increases
+        consecutive_increases >= minimum_consecutive_increases
+        and total_growth >= minimum_growth_mb
     )
 
     return {
         "suspicious": suspicious,
-        "total_growth_mb": total_growth,
-        "consecutive_increases": longest_run,
+        "total_growth_mb": round(total_growth, 2),
+        "consecutive_increases": consecutive_increases,
         "reason": (
-            "Growth and trend conditions met"
+            "Sustained growth detected"
             if suspicious
-            else "Selected conditions not met"
+            else "Selected detection conditions not met"
         ),
     }

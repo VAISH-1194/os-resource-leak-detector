@@ -1,12 +1,18 @@
-"""Recovery actions for simulation mode only."""
+
+"""Recovery functions for simulated processes only."""
+
+from simulator import recover_process
+
+
+def recover_simulated_process(processes, process_name):
+    """Recover a process in the simulation and return a recovery report."""
+    return recover_process(processes, process_name)
 
 
 def simulated_reset(memory_samples_mb, reset_to_mb=None):
-    """Return a new sample list whose last value is reset to a safe demo value.
-
-    This function does not touch OS processes or real system memory.
-    """
+    """Compatibility helper for resetting a list of simulated measurements."""
     samples = list(memory_samples_mb)
+
     if not samples:
         return samples
 
